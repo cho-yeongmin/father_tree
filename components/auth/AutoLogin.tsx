@@ -1,13 +1,21 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getRememberedLogin, toAuthEmail } from "@/lib/auth/credentials";
+
+const ENTRY_PATHS = new Set(["/", "/auth/login"]);
+
+function goToMap(router: ReturnType<typeof useRouter>) {
+  router.replace("/map");
+  router.refresh();
+}
 
 /** 저장된 아이디·비밀번호로 세션이 없을 때 자동 로그인 */
 export function AutoLogin() {
   const router = useRouter();
+  const pathname = usePathname();
   const attempted = useRef(false);
 
   useEffect(() => {
@@ -15,11 +23,6 @@ export function AutoLogin() {
       return;
     }
     attempted.current = true;
-
-    const remembered = getRememberedLogin();
-    if (!remembered) {
-      return;
-    }
 
     const supabase = createClient();
 
@@ -29,6 +32,14 @@ export function AutoLogin() {
       } = await supabase.auth.getSession();
 
       if (session) {
+        if (ENTRY_PATHS.has(pathname)) {
+          goToMap(router);
+        }
+        return;
+      }
+
+      const remembered = getRememberedLogin();
+      if (!remembered) {
         return;
       }
 
@@ -38,10 +49,10 @@ export function AutoLogin() {
       });
 
       if (!error) {
-        router.refresh();
+        goToMap(router);
       }
     })();
-  }, [router]);
+  }, [pathname, router]);
 
   return null;
 }

@@ -53,7 +53,7 @@ export function MapPageClient({ trees, reviewedTreeIds }: MapPageClientProps) {
         trees={displayTrees}
         reviewedTreeIds={reviewedTreeIds}
         userFocus={userFocus}
-        fitAllTrees={!nearbyOnly}
+        fitAllTrees={nearbyOnly && !!position}
       />
     </>
   );

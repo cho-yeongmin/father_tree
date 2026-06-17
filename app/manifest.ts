@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "세월을 품은 나무들",
     short_name: "나무들",
     description: "전국의 천연기념물과 보호수를 탐방하는 나무 여행 앱",
-    start_url: "/map",
+    start_url: "/auth/login",
     display: "standalone",
     background_color: "#f8faf6",
     theme_color: "#2d5a27",

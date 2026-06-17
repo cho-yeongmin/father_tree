@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { loadKakaoMapScript, MARKER_IMAGES } from "@/lib/kakao/maps";
+import { DEFAULT_MAP_REGION } from "@/lib/map/default-region";
 import { resolvePinType } from "@/lib/trees/pin-type";
 import { formatDistanceKm } from "@/lib/geo/nearby";
 import type { Tree } from "@/types/database";
@@ -19,7 +20,7 @@ export function TreeMap({
   trees,
   reviewedTreeIds,
   userFocus = null,
-  fitAllTrees = true,
+  fitAllTrees = false,
 }: TreeMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<kakao.maps.Map | null>(null);
@@ -54,10 +55,13 @@ export function TreeMap({
         await loadKakaoMapScript();
         if (cancelled || !mapRef.current) return;
 
-        const center = new kakao.maps.LatLng(36.5, 127.5);
+        const center = new kakao.maps.LatLng(
+          DEFAULT_MAP_REGION.latitude,
+          DEFAULT_MAP_REGION.longitude,
+        );
         const map = new kakao.maps.Map(mapRef.current, {
           center,
-          level: 13,
+          level: DEFAULT_MAP_REGION.level,
         });
         mapInstanceRef.current = map;
 

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { Card } from "@/components/ui/Card";
@@ -38,11 +37,6 @@ export default async function LoginPage() {
             </p>
           </Card>
         )}
-        <p className="text-center text-lg text-muted">
-          <Link href="/map" className="font-medium text-primary underline">
-            로그인 없이 지도만 보기
-          </Link>
-        </p>
       </div>
     </div>
   );
