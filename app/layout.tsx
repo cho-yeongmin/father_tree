@@ -10,12 +10,12 @@ const notoSansKr = Noto_Sans_KR({
 });
 
 export const metadata: Metadata = {
-  title: "세월을 품은 나무들",
+  title: "아빠의 나무 여행",
   description: "전국의 천연기념물과 보호수를 탐방하는 나무 여행 앱",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "세월을 품은 나무들",
+    title: "아빠의 나무 여행",
   },
   icons: {
     icon: [

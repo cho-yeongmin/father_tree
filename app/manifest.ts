@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "세월을 품은 나무들",
-    short_name: "나무들",
+    name: "아빠의 나무 여행",
+    short_name: "나무여행",
     description: "전국의 천연기념물과 보호수를 탐방하는 나무 여행 앱",
     start_url: "/auth/login",
     display: "standalone",
