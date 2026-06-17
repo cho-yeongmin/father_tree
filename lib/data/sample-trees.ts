@@ -1,0 +1,73 @@
+import type { Tree } from "@/types/database";
+
+const now = new Date().toISOString();
+
+export const SAMPLE_TREES: Tree[] = [
+  {
+    id: "a1000001-0000-4000-8000-000000000001",
+    name: "보은 법주사 은행나무",
+    type: "natural_monument",
+    latitude: 36.5333,
+    longitude: 127.7167,
+    address: "충북 보은군 속리산면 법주사로 379",
+    region: "충청북도",
+    district: "보은군",
+    designation_no: null,
+    summary: "속리산 법주사에 서 있는 천년 은행나무",
+    description:
+      "법주사 대웅전 앞에 서 있는 은행나무로, 조선시대부터 사찰의 상징으로 전해져 왔습니다.",
+    legend:
+      "임진왜란 때 승병들이 이 나무 아래에서 의를 논했다는 전설이 전해집니다.",
+    image_url: null,
+    stamp_radius_m: 50,
+    is_active: true,
+    source: null,
+    external_id: null,
+    created_at: now,
+    updated_at: now,
+  },
+  {
+    id: "a1000001-0000-4000-8000-000000000002",
+    name: "창녕 황산벌 은행나무",
+    type: "protected_tree",
+    latitude: 35.5432,
+    longitude: 128.5012,
+    address: "경남 창녕군 창녕읍",
+    region: "경상남도",
+    district: "창녕군",
+    designation_no: null,
+    summary: "황산벌 전투지에 서 있는 고목 은행나무",
+    description:
+      "고려와 왜군의 황산벌 전투와 관련된 지역 보호수입니다.",
+    legend:
+      "전투 당시 장수들이 이 나무 아래에서 전략을 세웠다고 합니다.",
+    image_url: null,
+    stamp_radius_m: 50,
+    is_active: true,
+    source: null,
+    external_id: null,
+    created_at: now,
+    updated_at: now,
+  },
+  {
+    id: "a1000001-0000-4000-8000-000000000003",
+    name: "제주 상록수",
+    type: "natural_monument",
+    latitude: 33.3617,
+    longitude: 126.5292,
+    address: "제주특별자치도 제주시",
+    region: "제주특별자치도",
+    district: "제주시",
+    designation_no: null,
+    summary: "제주 원시림을 대표하는 상록수",
+    description: "제주의 자연유산을 상징하는 천연기념물 수목입니다.",
+    legend: "옛날 제주 사람들은 이 나무를 마을의 수호목으로 모셨다고 합니다.",
+    image_url: null,
+    stamp_radius_m: 50,
+    is_active: true,
+    source: null,
+    external_id: null,
+    created_at: now,
+    updated_at: now,
+  },
+];
