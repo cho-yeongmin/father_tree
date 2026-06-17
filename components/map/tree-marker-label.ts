@@ -1,9 +1,7 @@
 import type { Tree } from "@/types/database";
 import { getTreeSpeciesLabel } from "@/lib/trees/display-name";
 import { getTreeThumbnailUrl } from "@/lib/trees/images";
-
-const PLACEHOLDER_THUMB =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='8' fill='%23d4e0d4'/%3E%3Ctext x='24' y='30' text-anchor='middle' font-size='20' fill='%232d5a27'%3E%F0%9F%8C%B3%3C/text%3E%3C/svg%3E";
+import { PLACEHOLDER_THUMB } from "@/lib/map/map-thumbnail";
 
 export function createTreeMarkerLabelElement(
   tree: Tree,
@@ -17,10 +15,16 @@ export function createTreeMarkerLabelElement(
 
   const thumb = document.createElement("img");
   thumb.className = "tree-map-pin-label__thumb";
-  thumb.src = getTreeThumbnailUrl(tree) ?? PLACEHOLDER_THUMB;
+  thumb.src = PLACEHOLDER_THUMB;
   thumb.alt = "";
-  thumb.loading = "lazy";
+  thumb.decoding = "async";
   thumb.referrerPolicy = "no-referrer";
+
+  const thumbnailUrl = getTreeThumbnailUrl(tree);
+  if (thumbnailUrl) {
+    thumb.dataset.thumbUrl = thumbnailUrl;
+    thumb.dataset.thumbReady = "false";
+  }
 
   const textWrap = document.createElement("div");
   textWrap.className = "tree-map-pin-label__text";
@@ -47,5 +51,5 @@ export function createTreeMarkerLabelElement(
 
 /** 줌이 멀면 라벨을 숨깁니다. 카카오 지도 level이 작을수록 확대됨 */
 export function shouldShowTreeMarkerLabels(mapLevel: number): boolean {
-  return mapLevel <= 10;
+  return mapLevel <= 9;
 }

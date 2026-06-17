@@ -68,10 +68,10 @@ body {
 }
 
 .tree-map-pin-label__thumb {
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   flex-shrink: 0;
-  border-radius: 10px;
+  border-radius: 8px;
   object-fit: cover;
   background: #eef4ee;
 }

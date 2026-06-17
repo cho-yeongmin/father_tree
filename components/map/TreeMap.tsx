@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { loadKakaoMapScript, MARKER_IMAGES } from "@/lib/kakao/maps";
 import { DEFAULT_MAP_REGION } from "@/lib/map/default-region";
+import { attachMapThumbnail } from "@/lib/map/map-thumbnail";
 import { resolvePinType } from "@/lib/trees/pin-type";
 import { formatDistanceKm } from "@/lib/geo/nearby";
 import type { Tree } from "@/types/database";
@@ -20,6 +21,13 @@ interface TreeMapProps {
   fitAllTrees?: boolean;
 }
 
+interface OverlayItem {
+  tree: Tree;
+  overlay: kakao.maps.CustomOverlay;
+  thumbImg: HTMLImageElement;
+  position: kakao.maps.LatLng;
+}
+
 export function TreeMap({
   trees,
   reviewedTreeIds,
@@ -30,7 +38,7 @@ export function TreeMap({
   const mapInstanceRef = useRef<kakao.maps.Map | null>(null);
   const clustererRef = useRef<kakao.maps.MarkerClusterer | null>(null);
   const markersRef = useRef<kakao.maps.Marker[]>([]);
-  const overlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
+  const overlayItemsRef = useRef<OverlayItem[]>([]);
   const reviewedSet = useRef(new Set(reviewedTreeIds));
 
   const [selectedTree, setSelectedTree] = useState<Tree | null>(null);
@@ -46,14 +54,26 @@ export function TreeMap({
     setSelectedPinType(pinType);
   }, []);
 
-  const updateOverlayVisibility = useCallback(() => {
+  const refreshOverlayVisibility = useCallback(() => {
     const map = mapInstanceRef.current;
     if (!map) {
       return;
     }
 
-    const visible = shouldShowTreeMarkerLabels(map.getLevel());
-    overlaysRef.current.forEach((overlay) => overlay.setVisible(visible));
+    const labelsAllowed = shouldShowTreeMarkerLabels(map.getLevel());
+    const bounds = map.getBounds();
+
+    overlayItemsRef.current.forEach((item) => {
+      const inBounds = bounds.contain(item.position);
+      const show = labelsAllowed && inBounds;
+
+      if (show) {
+        item.overlay.setMap(map);
+        attachMapThumbnail(item.thumbImg);
+      } else {
+        item.overlay.setMap(null);
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -88,11 +108,13 @@ export function TreeMap({
         });
         clustererRef.current = clusterer;
 
-        kakao.maps.event.addListener(map, "zoom_changed", updateOverlayVisibility);
+        kakao.maps.event.addListener(map, "zoom_changed", refreshOverlayVisibility);
+        kakao.maps.event.addListener(map, "dragend", refreshOverlayVisibility);
+        kakao.maps.event.addListener(map, "idle", refreshOverlayVisibility);
 
         setIsLoading(false);
         setMapReady(true);
-        updateOverlayVisibility();
+        refreshOverlayVisibility();
       } catch (error) {
         setLoadError(
           error instanceof Error ? error.message : "지도를 불러올 수 없습니다.",
@@ -107,11 +129,11 @@ export function TreeMap({
       cancelled = true;
       clustererRef.current?.clear();
       markersRef.current = [];
-      overlaysRef.current.forEach((overlay) => overlay.setMap(null));
-      overlaysRef.current = [];
+      overlayItemsRef.current.forEach((item) => item.overlay.setMap(null));
+      overlayItemsRef.current = [];
       setMapReady(false);
     };
-  }, [updateOverlayVisibility]);
+  }, [refreshOverlayVisibility]);
 
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -120,8 +142,8 @@ export function TreeMap({
 
     clusterer.clear();
     markersRef.current = [];
-    overlaysRef.current.forEach((overlay) => overlay.setMap(null));
-    overlaysRef.current = [];
+    overlayItemsRef.current.forEach((item) => item.overlay.setMap(null));
+    overlayItemsRef.current = [];
 
     const markers = trees.map((tree) => {
       const pinType = resolvePinType(tree, reviewedSet.current);
@@ -154,16 +176,25 @@ export function TreeMap({
       kakao.maps.event.addListener(marker, "click", openSummary);
 
       const labelElement = createTreeMarkerLabelElement(tree, openSummary);
+      const thumbImg = labelElement.querySelector("img");
+      if (!(thumbImg instanceof HTMLImageElement)) {
+        throw new Error("지도 라벨 썸네일 요소를 찾을 수 없습니다.");
+      }
+
       const overlay = new kakao.maps.CustomOverlay({
-        map,
         position,
         content: labelElement,
         xAnchor: 0,
         yAnchor: 1,
         zIndex: 4,
       });
-      overlay.setVisible(shouldShowTreeMarkerLabels(map.getLevel()));
-      overlaysRef.current.push(overlay);
+
+      overlayItemsRef.current.push({
+        tree,
+        overlay,
+        thumbImg,
+        position,
+      });
 
       return marker;
     });
@@ -186,14 +217,14 @@ export function TreeMap({
       map.setBounds(bounds, 80, 80, 80, 80);
     }
 
-    updateOverlayVisibility();
+    refreshOverlayVisibility();
   }, [
     trees,
     handleMarkerClick,
     mapReady,
     userFocus,
     fitAllTrees,
-    updateOverlayVisibility,
+    refreshOverlayVisibility,
   ]);
 
   if (loadError) {
