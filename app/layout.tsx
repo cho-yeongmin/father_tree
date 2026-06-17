@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR } from "next/font/google";
+import { AutoLogin } from "@/components/auth/AutoLogin";
 import "./globals.css";
 
 const notoSansKr = Noto_Sans_KR({
@@ -39,6 +40,7 @@ export default function RootLayout({
   return (
     <html lang="ko" className={`${notoSansKr.variable} h-full`}>
       <body className="min-h-full flex flex-col bg-background text-foreground antialiased">
+        <AutoLogin />
         {children}
       </body>
     </html>

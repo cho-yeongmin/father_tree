@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { toDisplayUserId } from "@/lib/auth/credentials";
 import { createClient } from "@/lib/supabase/server";
 
 export async function AuthStatus() {
@@ -29,7 +30,7 @@ export async function AuthStatus() {
   return (
     <div className="flex items-center gap-3">
       <span className="max-w-[120px] truncate text-base text-muted">
-        {user.email}
+        {toDisplayUserId(user.email)}
       </span>
       <LogoutButton />
     </div>

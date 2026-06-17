@@ -24,7 +24,7 @@ export default async function LoginPage() {
     <div className="flex min-h-full flex-1 flex-col">
       <PageHeader
         title="로그인"
-        description="방문 스탬프와 라이브러리를 저장하려면 로그인이 필요합니다"
+        description="관리자가 알려준 아이디와 비밀번호로 로그인하세요"
       />
       <div className="flex flex-1 flex-col gap-4 p-4">
         {supabaseUrl && supabaseKey ? (
