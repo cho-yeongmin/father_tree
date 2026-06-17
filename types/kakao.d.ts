@@ -62,6 +62,23 @@ declare namespace kakao.maps {
     clear(): void;
   }
 
+  interface CustomOverlayOptions {
+    map?: Map | null;
+    position: LatLng;
+    content: HTMLElement | string;
+    xAnchor?: number;
+    yAnchor?: number;
+    zIndex?: number;
+  }
+
+  class CustomOverlay {
+    constructor(options: CustomOverlayOptions);
+    setMap(map: Map | null): void;
+    setPosition(position: LatLng): void;
+    setContent(content: HTMLElement | string): void;
+    setVisible(visible: boolean): void;
+  }
+
   interface MarkerClustererOptions {
     map: Map;
     averageCenter?: boolean;

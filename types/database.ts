@@ -1,5 +1,10 @@
 export type TreeType = "natural_monument" | "protected_tree";
 
+export interface TreeImage {
+  url: string;
+  description?: string | null;
+}
+
 export interface Tree {
   id: string;
   name: string;
@@ -14,6 +19,7 @@ export interface Tree {
   description: string | null;
   legend: string | null;
   image_url: string | null;
+  image_gallery: TreeImage[];
   stamp_radius_m: number;
   is_active: boolean;
   source: string | null;

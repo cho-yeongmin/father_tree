@@ -7,6 +7,10 @@ import { resolvePinType } from "@/lib/trees/pin-type";
 import { formatDistanceKm } from "@/lib/geo/nearby";
 import type { Tree } from "@/types/database";
 import type { MarkerPinType } from "@/types/tree";
+import {
+  createTreeMarkerLabelElement,
+  shouldShowTreeMarkerLabels,
+} from "./tree-marker-label";
 import { TreeSummaryCard } from "./TreeSummaryCard";
 
 interface TreeMapProps {
@@ -26,6 +30,7 @@ export function TreeMap({
   const mapInstanceRef = useRef<kakao.maps.Map | null>(null);
   const clustererRef = useRef<kakao.maps.MarkerClusterer | null>(null);
   const markersRef = useRef<kakao.maps.Marker[]>([]);
+  const overlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
   const reviewedSet = useRef(new Set(reviewedTreeIds));
 
   const [selectedTree, setSelectedTree] = useState<Tree | null>(null);
@@ -39,6 +44,16 @@ export function TreeMap({
   const handleMarkerClick = useCallback((tree: Tree, pinType: MarkerPinType) => {
     setSelectedTree(tree);
     setSelectedPinType(pinType);
+  }, []);
+
+  const updateOverlayVisibility = useCallback(() => {
+    const map = mapInstanceRef.current;
+    if (!map) {
+      return;
+    }
+
+    const visible = shouldShowTreeMarkerLabels(map.getLevel());
+    overlaysRef.current.forEach((overlay) => overlay.setVisible(visible));
   }, []);
 
   useEffect(() => {
@@ -73,8 +88,11 @@ export function TreeMap({
         });
         clustererRef.current = clusterer;
 
+        kakao.maps.event.addListener(map, "zoom_changed", updateOverlayVisibility);
+
         setIsLoading(false);
         setMapReady(true);
+        updateOverlayVisibility();
       } catch (error) {
         setLoadError(
           error instanceof Error ? error.message : "지도를 불러올 수 없습니다.",
@@ -89,9 +107,11 @@ export function TreeMap({
       cancelled = true;
       clustererRef.current?.clear();
       markersRef.current = [];
+      overlaysRef.current.forEach((overlay) => overlay.setMap(null));
+      overlaysRef.current = [];
       setMapReady(false);
     };
-  }, []);
+  }, [updateOverlayVisibility]);
 
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -100,6 +120,8 @@ export function TreeMap({
 
     clusterer.clear();
     markersRef.current = [];
+    overlaysRef.current.forEach((overlay) => overlay.setMap(null));
+    overlaysRef.current = [];
 
     const markers = trees.map((tree) => {
       const pinType = resolvePinType(tree, reviewedSet.current);
@@ -124,10 +146,24 @@ export function TreeMap({
         clickable: true,
       });
 
-      kakao.maps.event.addListener(marker, "click", () => {
+      const openSummary = () => {
         handleMarkerClick(tree, pinType);
         map.panTo(position);
+      };
+
+      kakao.maps.event.addListener(marker, "click", openSummary);
+
+      const labelElement = createTreeMarkerLabelElement(tree, openSummary);
+      const overlay = new kakao.maps.CustomOverlay({
+        map,
+        position,
+        content: labelElement,
+        xAnchor: 0,
+        yAnchor: 1,
+        zIndex: 4,
       });
+      overlay.setVisible(shouldShowTreeMarkerLabels(map.getLevel()));
+      overlaysRef.current.push(overlay);
 
       return marker;
     });
@@ -149,7 +185,16 @@ export function TreeMap({
       });
       map.setBounds(bounds, 80, 80, 80, 80);
     }
-  }, [trees, handleMarkerClick, mapReady, userFocus, fitAllTrees]);
+
+    updateOverlayVisibility();
+  }, [
+    trees,
+    handleMarkerClick,
+    mapReady,
+    userFocus,
+    fitAllTrees,
+    updateOverlayVisibility,
+  ]);
 
   if (loadError) {
     return (

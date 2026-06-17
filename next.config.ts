@@ -9,6 +9,16 @@ const withSerwist = withSerwistInit({
   disable: process.env.NODE_ENV === "development",
 });
 
-const nextConfig: NextConfig = {};
+const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "www.khs.go.kr",
+        pathname: "/unisearch/images/**",
+      },
+    ],
+  },
+};
 
 export default withSerwist(nextConfig);

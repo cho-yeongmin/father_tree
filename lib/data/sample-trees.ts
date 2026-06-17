@@ -19,6 +19,7 @@ export const SAMPLE_TREES: Tree[] = [
     legend:
       "임진왜란 때 승병들이 이 나무 아래에서 의를 논했다는 전설이 전해집니다.",
     image_url: null,
+    image_gallery: [],
     stamp_radius_m: 50,
     is_active: true,
     source: null,
@@ -42,6 +43,7 @@ export const SAMPLE_TREES: Tree[] = [
     legend:
       "전투 당시 장수들이 이 나무 아래에서 전략을 세웠다고 합니다.",
     image_url: null,
+    image_gallery: [],
     stamp_radius_m: 50,
     is_active: true,
     source: null,
@@ -63,6 +65,7 @@ export const SAMPLE_TREES: Tree[] = [
     description: "제주의 자연유산을 상징하는 천연기념물 수목입니다.",
     legend: "옛날 제주 사람들은 이 나무를 마을의 수호목으로 모셨다고 합니다.",
     image_url: null,
+    image_gallery: [],
     stamp_radius_m: 50,
     is_active: true,
     source: null,

@@ -13,8 +13,10 @@ config({ path: resolve(process.cwd(), ".env.local") });
 import {
   fetchAllNaturalMonuments,
   fetchNaturalMonumentDetail,
+  fetchNaturalMonumentImages,
   sleep,
 } from "../lib/cha/client";
+import { normalizeChaImageUrl } from "../lib/cha/image-url";
 import { buildSummary, normalizeRegionName, splitLegend } from "../lib/cha/map-region";
 import {
   hasValidCoordinates,
@@ -55,10 +57,19 @@ async function main() {
     try {
       await sleep(250);
       const detail = await fetchNaturalMonumentDetail(item);
+      const images = await fetchNaturalMonumentImages(item);
       const region = normalizeRegionName(detail.region || item.region);
       const district = detail.district || item.district || null;
       const content = detail.content.trim();
       const legend = splitLegend(content);
+      const imageGallery = images.map((image) => ({
+        url: image.url,
+        description: image.description || null,
+      }));
+      const mainImage =
+        imageGallery[0]?.url ??
+        normalizeChaImageUrl(detail.imageUrl) ??
+        null;
 
       const row = {
         name: item.name,
@@ -72,7 +83,8 @@ async function main() {
         summary: buildSummary(item.name, content),
         description: content || null,
         legend,
-        image_url: detail.imageUrl || null,
+        image_url: mainImage,
+        image_gallery: imageGallery,
         stamp_radius_m: 50,
         is_active: true,
         source: "cha",

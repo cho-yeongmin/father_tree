@@ -1,6 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Tree, Visit, VisitPhoto } from "@/types/database";
+import { getTreeImages } from "@/lib/trees/images";
 import { VisitReviewSection } from "@/components/review/VisitReviewSection";
+import { TreeImageSection } from "@/components/trees/TreeImageSection";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { KakaoShareButton } from "./KakaoShareButton";
@@ -24,6 +27,8 @@ export function TreeDetailContent({
   isLoggedIn,
   photos,
 }: TreeDetailContentProps) {
+  const treeImages = getTreeImages(tree);
+
   return (
     <div className="flex flex-1 flex-col gap-4 p-4">
       <Card padding="lg">
@@ -41,6 +46,8 @@ export function TreeDetailContent({
           <p className="mt-2 text-lg text-muted">{tree.address}</p>
         )}
       </Card>
+
+      <TreeImageSection images={treeImages} treeName={tree.name} />
 
       {tree.description && (
         <Card padding="lg">

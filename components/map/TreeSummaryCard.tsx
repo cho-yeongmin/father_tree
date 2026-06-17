@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import type { Tree } from "@/types/database";
 import type { MarkerPinType } from "@/types/tree";
+import { getTreeSpeciesLabel } from "@/lib/trees/display-name";
+import { getTreeThumbnailUrl } from "@/lib/trees/images";
 import { Card } from "@/components/ui/Card";
 
 const PIN_LABELS: Record<MarkerPinType, string> = {
@@ -30,11 +33,24 @@ export function TreeSummaryCard({
   onClose,
   distanceLabel,
 }: TreeSummaryCardProps) {
+  const thumbnailUrl = getTreeThumbnailUrl(tree);
+
   return (
     <div className="absolute bottom-4 left-4 right-4 z-10">
       <Link href={`/trees/${tree.id}`} className="block">
         <Card padding="md" className="shadow-lg active:bg-primary/5">
           <div className="flex items-start justify-between gap-3">
+            {thumbnailUrl && (
+              <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-border">
+                <Image
+                  src={thumbnailUrl}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="80px"
+                />
+              </div>
+            )}
             <div className="min-w-0 flex-1">
               <span
                 className={[
@@ -44,7 +60,10 @@ export function TreeSummaryCard({
               >
                 {PIN_LABELS[pinType]}
               </span>
-              <h2 className="mt-2 truncate text-xl font-bold text-foreground">
+              <p className="mt-2 text-base font-semibold text-primary">
+                {getTreeSpeciesLabel(tree.name)}
+              </p>
+              <h2 className="mt-1 truncate text-xl font-bold text-foreground">
                 {tree.name}
               </h2>
               <p className="mt-1 text-lg text-muted">

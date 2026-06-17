@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { TreeImage } from "@/types/database";
 
 export interface TreeUpsertRow {
   name: string;
@@ -13,6 +14,7 @@ export interface TreeUpsertRow {
   description: string | null;
   legend: string | null;
   image_url: string | null;
+  image_gallery: TreeImage[];
   stamp_radius_m: number;
   is_active: boolean;
   source: string;

@@ -20,3 +20,8 @@ export interface ChaDetailItem {
   region: string;
   district: string;
 }
+
+export interface ChaImageItem {
+  url: string;
+  description: string;
+}

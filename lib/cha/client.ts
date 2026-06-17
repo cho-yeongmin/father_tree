@@ -1,10 +1,12 @@
 import {
   CHA_DETAIL_API,
+  CHA_IMAGE_API,
   CHA_KIND_NATURAL_MONUMENT,
   CHA_LIST_API,
   CHA_REGION_CODES,
 } from "./constants";
-import type { ChaDetailItem, ChaListItem } from "./types";
+import type { ChaDetailItem, ChaImageItem, ChaListItem } from "./types";
+import { normalizeChaImageUrl } from "./image-url";
 import { extractCdata, extractItems } from "./xml";
 
 async function fetchXml(url: string): Promise<string> {
@@ -97,10 +99,8 @@ export async function fetchNaturalMonumentDetail(
   const xml = await fetchXml(`${CHA_DETAIL_API}?${params}`);
   const itemXml = extractItems(xml)[0] ?? xml;
 
-  const imageUrl = extractCdata(itemXml, "imageUrl").replace(
-    /^http:\/\//,
-    "https://",
-  );
+  const imageUrl =
+    normalizeChaImageUrl(extractCdata(itemXml, "imageUrl")) ?? "";
 
   return {
     address: extractCdata(itemXml, "ccbaLcad"),
@@ -110,6 +110,35 @@ export async function fetchNaturalMonumentDetail(
     region: extractCdata(itemXml, "ccbaCtcdNm").trim(),
     district: extractCdata(itemXml, "ccsiName").replace(/^\.$/, ""),
   };
+}
+
+export async function fetchNaturalMonumentImages(
+  item: Pick<ChaListItem, "ccbaKdcd" | "ccbaAsno" | "ccbaCtcd">,
+): Promise<ChaImageItem[]> {
+  const params = new URLSearchParams({
+    ccbaKdcd: item.ccbaKdcd,
+    ccbaAsno: item.ccbaAsno,
+    ccbaCtcd: item.ccbaCtcd,
+  });
+
+  const xml = await fetchXml(`${CHA_IMAGE_API}?${params}`);
+  const seen = new Set<string>();
+  const images: ChaImageItem[] = [];
+
+  for (const itemXml of extractItems(xml)) {
+    const url = normalizeChaImageUrl(extractCdata(itemXml, "imageUrl"));
+    if (!url || seen.has(url)) {
+      continue;
+    }
+
+    seen.add(url);
+    images.push({
+      url,
+      description: extractCdata(itemXml, "ccimDesc"),
+    });
+  }
+
+  return images;
 }
 
 export function sleep(ms: number): Promise<void> {

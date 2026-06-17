@@ -27,3 +27,6 @@ export const CHA_LIST_API =
 
 export const CHA_DETAIL_API =
   "https://www.cha.go.kr/cha/SearchKindOpenapiDt.do";
+
+export const CHA_IMAGE_API =
+  "https://www.cha.go.kr/cha/SearchImageOpenapi.do";

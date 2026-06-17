@@ -166,6 +166,7 @@ async function main() {
       description: null,
       legend: null,
       image_url: null,
+      image_gallery: [],
       stamp_radius_m: 50,
       is_active: true,
       source: "localdata",
