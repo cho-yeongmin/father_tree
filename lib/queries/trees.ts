@@ -1,31 +1,37 @@
 import { SAMPLE_TREES } from "@/lib/data/sample-trees";
 import { createClient } from "@/lib/supabase/server";
+import { fetchNaturalMonuments } from "@/lib/queries/tree-fetch";
 import type { Tree } from "@/types/database";
 
-export interface TreeMapData {
-  trees: Tree[];
+export interface MapInitialData {
+  naturalMonuments: Tree[];
   reviewedTreeIds: Set<string>;
 }
 
-export async function getTreesForMap(): Promise<TreeMapData> {
+function sampleNaturalMonuments(): Tree[] {
+  return SAMPLE_TREES.filter((tree) => tree.type === "natural_monument");
+}
+
+export async function getMapInitialData(): Promise<MapInitialData> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    return { trees: SAMPLE_TREES, reviewedTreeIds: new Set() };
+    return {
+      naturalMonuments: sampleNaturalMonuments(),
+      reviewedTreeIds: new Set(),
+    };
   }
 
   try {
     const supabase = await createClient();
+    const naturalMonuments = await fetchNaturalMonuments(supabase);
 
-    const { data: trees, error: treesError } = await supabase
-      .from("trees")
-      .select("*")
-      .eq("is_active", true)
-      .order("name");
-
-    if (treesError || !trees?.length) {
-      return { trees: SAMPLE_TREES, reviewedTreeIds: new Set() };
+    if (!naturalMonuments?.length) {
+      return {
+        naturalMonuments: sampleNaturalMonuments(),
+        reviewedTreeIds: new Set(),
+      };
     }
 
     const {
@@ -47,9 +53,12 @@ export async function getTreesForMap(): Promise<TreeMapData> {
       });
     }
 
-    return { trees: trees as Tree[], reviewedTreeIds };
+    return { naturalMonuments, reviewedTreeIds };
   } catch {
-    return { trees: SAMPLE_TREES, reviewedTreeIds: new Set() };
+    return {
+      naturalMonuments: sampleNaturalMonuments(),
+      reviewedTreeIds: new Set(),
+    };
   }
 }
 

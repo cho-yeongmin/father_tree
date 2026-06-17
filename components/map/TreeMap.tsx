@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { loadKakaoMapScript, MARKER_IMAGES } from "@/lib/kakao/maps";
 import { DEFAULT_MAP_REGION } from "@/lib/map/default-region";
 import { attachLabelImage } from "@/lib/map/label-image-loader";
+import type { GeoBounds } from "@/lib/geo/bounds";
 import { resolvePinType } from "@/lib/trees/pin-type";
 import { formatDistanceKm } from "@/lib/geo/nearby";
 import type { Tree } from "@/types/database";
@@ -19,6 +20,8 @@ interface TreeMapProps {
   reviewedTreeIds: string[];
   userFocus?: { latitude: number; longitude: number } | null;
   fitAllTrees?: boolean;
+  onMapViewportChange?: (bounds: GeoBounds, mapLevel: number) => void;
+  protectedLoading?: boolean;
 }
 
 interface OverlayItem {
@@ -33,6 +36,8 @@ export function TreeMap({
   reviewedTreeIds,
   userFocus = null,
   fitAllTrees = false,
+  onMapViewportChange,
+  protectedLoading = false,
 }: TreeMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<kakao.maps.Map | null>(null);
@@ -53,6 +58,27 @@ export function TreeMap({
     setSelectedTree(tree);
     setSelectedPinType(pinType);
   }, []);
+
+  const emitViewportChange = useCallback(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !onMapViewportChange) {
+      return;
+    }
+
+    const bounds = map.getBounds();
+    const sw = bounds.getSouthWest();
+    const ne = bounds.getNorthEast();
+
+    onMapViewportChange(
+      {
+        south: sw.getLat(),
+        west: sw.getLng(),
+        north: ne.getLat(),
+        east: ne.getLng(),
+      },
+      map.getLevel(),
+    );
+  }, [onMapViewportChange]);
 
   const refreshOverlayVisibility = useCallback(() => {
     const map = mapInstanceRef.current;
@@ -110,11 +136,15 @@ export function TreeMap({
 
         kakao.maps.event.addListener(map, "zoom_changed", refreshOverlayVisibility);
         kakao.maps.event.addListener(map, "dragend", refreshOverlayVisibility);
-        kakao.maps.event.addListener(map, "idle", refreshOverlayVisibility);
+        kakao.maps.event.addListener(map, "idle", () => {
+          refreshOverlayVisibility();
+          emitViewportChange();
+        });
 
         setIsLoading(false);
         setMapReady(true);
         refreshOverlayVisibility();
+        emitViewportChange();
       } catch (error) {
         setLoadError(
           error instanceof Error ? error.message : "지도를 불러올 수 없습니다.",
@@ -133,12 +163,12 @@ export function TreeMap({
       overlayItemsRef.current = [];
       setMapReady(false);
     };
-  }, [refreshOverlayVisibility]);
+  }, [refreshOverlayVisibility, emitViewportChange]);
 
   useEffect(() => {
     const map = mapInstanceRef.current;
     const clusterer = clustererRef.current;
-    if (!mapReady || !map || !clusterer || trees.length === 0) return;
+    if (!mapReady || !map || !clusterer) return;
 
     clusterer.clear();
     markersRef.current = [];
@@ -243,6 +273,11 @@ export function TreeMap({
       {isLoading && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/80">
           <p className="text-lg text-muted">지도를 불러오는 중...</p>
+        </div>
+      )}
+      {protectedLoading && (
+        <div className="absolute right-3 top-3 z-20 rounded-lg bg-card/95 px-3 py-2 text-sm text-muted shadow-md">
+          보호수 불러오는 중…
         </div>
       )}
       <div ref={mapRef} className="h-full min-h-[50vh] w-full" />

@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import type { GeoBounds } from "@/lib/geo/bounds";
 import type { Tree } from "@/types/database";
 
 const TreeMap = dynamic(
@@ -20,6 +21,8 @@ interface TreeMapViewProps {
   reviewedTreeIds: string[];
   userFocus?: { latitude: number; longitude: number } | null;
   fitAllTrees?: boolean;
+  onMapViewportChange?: (bounds: GeoBounds, mapLevel: number) => void;
+  protectedLoading?: boolean;
 }
 
 export function TreeMapView({
@@ -27,6 +30,8 @@ export function TreeMapView({
   reviewedTreeIds,
   userFocus,
   fitAllTrees,
+  onMapViewportChange,
+  protectedLoading = false,
 }: TreeMapViewProps) {
   return (
     <TreeMap
@@ -34,6 +39,8 @@ export function TreeMapView({
       reviewedTreeIds={reviewedTreeIds}
       userFocus={userFocus}
       fitAllTrees={fitAllTrees}
+      onMapViewportChange={onMapViewportChange}
+      protectedLoading={protectedLoading}
     />
   );
 }

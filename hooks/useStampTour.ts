@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getDistanceMeters } from "@/lib/geo/distance";
+import { fetchTreesNearPositionClient } from "@/lib/queries/trees-client";
 import { createClient } from "@/lib/supabase/client";
 import type { Tree } from "@/types/database";
 import { useGeolocation } from "./useGeolocation";
@@ -12,12 +13,12 @@ interface StampEvent {
 }
 
 interface UseStampTourOptions {
-  trees: Tree[];
   enabled?: boolean;
 }
 
-export function useStampTour({ trees, enabled = true }: UseStampTourOptions) {
+export function useStampTour({ enabled = true }: UseStampTourOptions = {}) {
   const { position, error: geoError } = useGeolocation({ enabled });
+  const [nearbyTrees, setNearbyTrees] = useState<Tree[]>([]);
   const [stampEvent, setStampEvent] = useState<StampEvent | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const stampedTodayRef = useRef<Set<string>>(new Set());
@@ -29,6 +30,27 @@ export function useStampTour({ trees, enabled = true }: UseStampTourOptions) {
       setIsLoggedIn(!!user);
     });
   }, []);
+
+  useEffect(() => {
+    if (!position || !enabled) {
+      setNearbyTrees([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    fetchTreesNearPositionClient(position.latitude, position.longitude).then(
+      (trees) => {
+        if (!cancelled) {
+          setNearbyTrees(trees);
+        }
+      },
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [position, enabled]);
 
   const requestNotificationPermission = useCallback(async () => {
     if (typeof Notification === "undefined") return;
@@ -51,7 +73,9 @@ export function useStampTour({ trees, enabled = true }: UseStampTourOptions) {
   }, []);
 
   useEffect(() => {
-    if (!position || !enabled || isLoggedIn === false) return;
+    if (!position || !enabled || isLoggedIn === false || nearbyTrees.length === 0) {
+      return;
+    }
 
     const currentPosition = position;
 
@@ -66,7 +90,7 @@ export function useStampTour({ trees, enabled = true }: UseStampTourOptions) {
         return;
       }
 
-      for (const tree of trees) {
+      for (const tree of nearbyTrees) {
         if (
           stampedTodayRef.current.has(tree.id) ||
           processingRef.current.has(tree.id)
@@ -110,7 +134,7 @@ export function useStampTour({ trees, enabled = true }: UseStampTourOptions) {
     }
 
     checkStamps();
-  }, [position, trees, enabled, isLoggedIn, showNotification]);
+  }, [position, nearbyTrees, enabled, isLoggedIn, showNotification]);
 
   const dismissStamp = useCallback(() => setStampEvent(null), []);
 

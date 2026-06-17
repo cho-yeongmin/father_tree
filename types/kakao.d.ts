@@ -20,6 +20,8 @@ declare namespace kakao.maps {
     constructor();
     extend(latlng: LatLng): void;
     contain(latlng: LatLng): boolean;
+    getSouthWest(): LatLng;
+    getNorthEast(): LatLng;
   }
 
   interface MapOptions {
