@@ -6,7 +6,6 @@ import type { Tree } from "@/types/database";
 import type { MarkerPinType } from "@/types/tree";
 import { getTreeSpeciesLabel } from "@/lib/trees/display-name";
 import { getTreeThumbnailUrl } from "@/lib/trees/images";
-import { getMapThumbnailApiUrl } from "@/lib/map/map-thumbnail";
 import { Card } from "@/components/ui/Card";
 
 const PIN_LABELS: Record<MarkerPinType, string> = {
@@ -34,10 +33,7 @@ export function TreeSummaryCard({
   onClose,
   distanceLabel,
 }: TreeSummaryCardProps) {
-  const originalThumb = getTreeThumbnailUrl(tree);
-  const thumbnailUrl = originalThumb
-    ? getMapThumbnailApiUrl(originalThumb)
-    : null;
+  const thumbnailUrl = getTreeThumbnailUrl(tree);
 
   return (
     <div className="absolute bottom-4 left-4 right-4 z-10">

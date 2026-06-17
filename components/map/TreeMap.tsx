@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { loadKakaoMapScript, MARKER_IMAGES } from "@/lib/kakao/maps";
 import { DEFAULT_MAP_REGION } from "@/lib/map/default-region";
-import { attachMapThumbnail } from "@/lib/map/map-thumbnail";
+import { attachLabelImage } from "@/lib/map/label-image-loader";
 import { resolvePinType } from "@/lib/trees/pin-type";
 import { formatDistanceKm } from "@/lib/geo/nearby";
 import type { Tree } from "@/types/database";
@@ -69,7 +69,7 @@ export function TreeMap({
 
       if (show) {
         item.overlay.setMap(map);
-        attachMapThumbnail(item.thumbImg);
+        attachLabelImage(item.thumbImg);
       } else {
         item.overlay.setMap(null);
       }

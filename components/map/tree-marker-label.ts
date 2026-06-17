@@ -1,7 +1,7 @@
 import type { Tree } from "@/types/database";
 import { getTreeSpeciesLabel } from "@/lib/trees/display-name";
 import { getTreeThumbnailUrl } from "@/lib/trees/images";
-import { PLACEHOLDER_THUMB } from "@/lib/map/map-thumbnail";
+import { PLACEHOLDER_THUMB } from "@/lib/map/label-image-loader";
 
 export function createTreeMarkerLabelElement(
   tree: Tree,
@@ -51,5 +51,5 @@ export function createTreeMarkerLabelElement(
 
 /** 줌이 멀면 라벨을 숨깁니다. 카카오 지도 level이 작을수록 확대됨 */
 export function shouldShowTreeMarkerLabels(mapLevel: number): boolean {
-  return mapLevel <= 9;
+  return mapLevel <= 10;
 }
