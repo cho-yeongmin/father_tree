@@ -12,6 +12,7 @@
     "import:cha-trees": "tsx scripts/import-cha-trees.ts",
     "import:protected-trees": "tsx scripts/import-protected-trees.ts",
     "export:protected-trees": "tsx scripts/export-protected-trees-csv.ts",
+    "generate:protected-species": "tsx scripts/generate-protected-species-data.ts",
     "import:trees": "tsx scripts/import-cha-trees.ts && tsx scripts/import-protected-trees.ts"
   },
   "dependencies": {

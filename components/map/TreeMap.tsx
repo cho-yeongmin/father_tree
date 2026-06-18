@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { loadKakaoMapScript, MARKER_IMAGES } from "@/lib/kakao/maps";
-import { DEFAULT_MAP_REGION } from "@/lib/map/default-region";
+import {
+  loadMapViewport,
+  saveMapViewport,
+} from "@/lib/map/viewport-storage";
 import { attachLabelImage } from "@/lib/map/label-image-loader";
 import type { GeoBounds } from "@/lib/geo/bounds";
 import { resolvePinType } from "@/lib/trees/pin-type";
@@ -11,7 +14,7 @@ import type { Tree } from "@/types/database";
 import type { MarkerPinType } from "@/types/tree";
 import {
   createTreeMarkerLabelElement,
-  shouldShowTreeMarkerLabel,
+  shouldShowTreeMarkerLabels,
 } from "./tree-marker-label";
 import { TreeSummaryCard } from "./TreeSummaryCard";
 
@@ -61,7 +64,18 @@ export function TreeMap({
 
   const emitViewportChange = useCallback(() => {
     const map = mapInstanceRef.current;
-    if (!map || !onMapViewportChange) {
+    if (!map) {
+      return;
+    }
+
+    const center = map.getCenter();
+    saveMapViewport({
+      latitude: center.getLat(),
+      longitude: center.getLng(),
+      level: map.getLevel(),
+    });
+
+    if (!onMapViewportChange) {
       return;
     }
 
@@ -91,7 +105,7 @@ export function TreeMap({
     overlayItemsRef.current.forEach((item) => {
       const inBounds = bounds.contain(item.position);
       const show =
-        inBounds && shouldShowTreeMarkerLabel(item.tree, map.getLevel());
+        inBounds && shouldShowTreeMarkerLabels(map.getLevel());
 
       if (show) {
         item.overlay.setMap(map);
@@ -118,13 +132,14 @@ export function TreeMap({
         await loadKakaoMapScript();
         if (cancelled || !mapRef.current) return;
 
+        const initialViewport = loadMapViewport();
         const center = new kakao.maps.LatLng(
-          DEFAULT_MAP_REGION.latitude,
-          DEFAULT_MAP_REGION.longitude,
+          initialViewport.latitude,
+          initialViewport.longitude,
         );
         const map = new kakao.maps.Map(mapRef.current, {
           center,
-          level: DEFAULT_MAP_REGION.level,
+          level: initialViewport.level,
         });
         mapInstanceRef.current = map;
 

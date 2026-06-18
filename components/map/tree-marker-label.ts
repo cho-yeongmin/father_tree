@@ -105,13 +105,3 @@ export function createTreeMarkerLabelElement(
 export function shouldShowTreeMarkerLabels(mapLevel: number): boolean {
   return mapLevel <= 10;
 }
-
-export function shouldShowTreeMarkerLabel(
-  tree: Tree,
-  mapLevel: number,
-): boolean {
-  if (tree.type === "protected_tree") {
-    return true;
-  }
-  return shouldShowTreeMarkerLabels(mapLevel);
-}
