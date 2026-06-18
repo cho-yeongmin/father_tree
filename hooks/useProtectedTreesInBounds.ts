@@ -24,7 +24,11 @@ export function useProtectedTreesInBounds({
   const loadedBoundsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    if (!enabled || !bounds) {
+    if (!enabled) {
+      return;
+    }
+
+    if (!bounds) {
       return;
     }
 
@@ -61,9 +65,13 @@ export function useProtectedTreesInBounds({
         }
 
         setProtectedTrees(Array.from(cache.values()));
-      } catch {
+      } catch (fetchError) {
         if (!cancelled) {
-          setError("보호수를 불러오지 못했습니다.");
+          const message =
+            fetchError instanceof Error
+              ? fetchError.message
+              : "보호수를 불러오지 못했습니다.";
+          setError(message);
         }
       } finally {
         if (!cancelled) {
@@ -80,11 +88,8 @@ export function useProtectedTreesInBounds({
 
   useEffect(() => {
     if (!enabled) {
-      cacheRef.current.clear();
-      loadedBoundsRef.current.clear();
-      setProtectedTrees([]);
-      setError(null);
       setIsLoading(false);
+      setError(null);
     }
   }, [enabled]);
 

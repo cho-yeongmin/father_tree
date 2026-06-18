@@ -13,7 +13,12 @@ export async function fetchProtectedTreesInBoundsClient(
 ): Promise<Tree[]> {
   const supabase = createClient();
   const trees = await fetchProtectedTreesInBounds(supabase, bounds);
-  return trees ?? [];
+
+  if (trees === null) {
+    throw new Error("보호수 데이터를 가져오지 못했습니다.");
+  }
+
+  return trees;
 }
 
 export async function fetchTreesNearPositionClient(

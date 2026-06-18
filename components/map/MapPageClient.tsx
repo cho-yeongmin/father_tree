@@ -15,7 +15,6 @@ import {
   filterNearbyTrees,
 } from "@/lib/geo/nearby";
 import type { GeoBounds } from "@/lib/geo/bounds";
-import { shouldShowProtectedTreePins } from "@/lib/map/zoom-levels";
 import type { Tree } from "@/types/database";
 
 interface MapPageClientProps {
@@ -30,17 +29,13 @@ export function MapPageClient({
   const [nearbyOnly, setNearbyOnly] = useState(false);
   const [typeFilters, setTypeFilters] = useState(DEFAULT_MAP_TYPE_FILTERS);
   const [mapBounds, setMapBounds] = useState<GeoBounds | null>(null);
-  const [mapLevel, setMapLevel] = useState<number | null>(null);
 
   const { position, error: geoError } = useGeolocation({
     enabled: nearbyOnly,
   });
 
-  const protectedPinsAllowed =
-    mapLevel === null || shouldShowProtectedTreePins(mapLevel);
-
   const shouldLoadProtected =
-    typeFilters.protected_tree && protectedPinsAllowed && mapBounds !== null;
+    typeFilters.protected_tree && mapBounds !== null;
 
   const {
     protectedTrees,
@@ -52,9 +47,8 @@ export function MapPageClient({
   });
 
   const handleMapViewportChange = useCallback(
-    (bounds: GeoBounds, level: number) => {
+    (bounds: GeoBounds, _mapLevel: number) => {
       setMapBounds(bounds);
-      setMapLevel(level);
     },
     [],
   );
@@ -76,24 +70,17 @@ export function MapPageClient({
   );
 
   const displayTrees = useMemo(() => {
-    const filtered = treesByType.filter((tree) => {
-      if (tree.type === "protected_tree" && !protectedPinsAllowed) {
-        return false;
-      }
-      return true;
-    });
-
     if (!nearbyOnly || !position) {
-      return filtered;
+      return treesByType;
     }
 
     return filterNearbyTrees(
-      filtered,
+      treesByType,
       position.latitude,
       position.longitude,
       DEFAULT_NEARBY_RADIUS_KM,
     );
-  }, [treesByType, nearbyOnly, position, protectedPinsAllowed]);
+  }, [treesByType, nearbyOnly, position]);
 
   const effectiveReviewedIds = typeFilters.visited_reviewed
     ? reviewedTreeIds
@@ -102,11 +89,6 @@ export function MapPageClient({
   const userFocus = nearbyOnly && position
     ? { latitude: position.latitude, longitude: position.longitude }
     : null;
-
-  const showZoomHint =
-    typeFilters.protected_tree &&
-    mapLevel !== null &&
-    !protectedPinsAllowed;
 
   function handleToggleNearby() {
     setNearbyOnly((prev) => !prev);
@@ -130,11 +112,6 @@ export function MapPageClient({
         onMapViewportChange={handleMapViewportChange}
         protectedLoading={shouldLoadProtected && protectedLoading}
       />
-      {showZoomHint && (
-        <p className="absolute left-1/2 top-20 z-10 max-w-[90%] -translate-x-1/2 rounded-lg bg-card/95 px-4 py-2 text-center text-base text-muted shadow-md">
-          보호수를 보려면 지도를 더 확대해 주세요
-        </p>
-      )}
       {protectedError && (
         <p className="absolute left-1/2 top-20 z-10 max-w-[90%] -translate-x-1/2 rounded-lg bg-card/95 px-4 py-2 text-center text-base text-red-700 shadow-md">
           {protectedError}

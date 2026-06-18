@@ -11,7 +11,7 @@ import type { Tree } from "@/types/database";
 import type { MarkerPinType } from "@/types/tree";
 import {
   createTreeMarkerLabelElement,
-  shouldShowTreeMarkerLabels,
+  shouldShowTreeMarkerLabel,
 } from "./tree-marker-label";
 import { TreeSummaryCard } from "./TreeSummaryCard";
 
@@ -27,7 +27,7 @@ interface TreeMapProps {
 interface OverlayItem {
   tree: Tree;
   overlay: kakao.maps.CustomOverlay;
-  thumbImg: HTMLImageElement;
+  thumbImg: HTMLImageElement | null;
   position: kakao.maps.LatLng;
 }
 
@@ -86,16 +86,18 @@ export function TreeMap({
       return;
     }
 
-    const labelsAllowed = shouldShowTreeMarkerLabels(map.getLevel());
     const bounds = map.getBounds();
 
     overlayItemsRef.current.forEach((item) => {
       const inBounds = bounds.contain(item.position);
-      const show = labelsAllowed && inBounds;
+      const show =
+        inBounds && shouldShowTreeMarkerLabel(item.tree, map.getLevel());
 
       if (show) {
         item.overlay.setMap(map);
-        attachLabelImage(item.thumbImg);
+        if (item.thumbImg) {
+          attachLabelImage(item.thumbImg);
+        }
       } else {
         item.overlay.setMap(null);
       }
@@ -207,9 +209,8 @@ export function TreeMap({
 
       const labelElement = createTreeMarkerLabelElement(tree, openSummary);
       const thumbImg = labelElement.querySelector("img");
-      if (!(thumbImg instanceof HTMLImageElement)) {
-        throw new Error("지도 라벨 썸네일 요소를 찾을 수 없습니다.");
-      }
+      const thumbElement =
+        thumbImg instanceof HTMLImageElement ? thumbImg : null;
 
       const overlay = new kakao.maps.CustomOverlay({
         position,
@@ -222,7 +223,7 @@ export function TreeMap({
       overlayItemsRef.current.push({
         tree,
         overlay,
-        thumbImg,
+        thumbImg: thumbElement,
         position,
       });
 

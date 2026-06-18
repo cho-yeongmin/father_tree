@@ -99,3 +99,9 @@ body {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
+
+.tree-map-pin-label--protected {
+  max-width: 160px;
+  padding: 6px 10px;
+  transform: translate(10px, -48px);
+}
