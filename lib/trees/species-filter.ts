@@ -11,6 +11,12 @@ export function isAllProtectedSpeciesSelected(
   return selected === null;
 }
 
+export function isNoneProtectedSpeciesSelected(
+  selected: ProtectedSpeciesSelection,
+): boolean {
+  return selected !== null && selected.size === 0;
+}
+
 export function isProtectedSpeciesSelected(
   selected: ProtectedSpeciesSelection,
   speciesName: string,
@@ -20,6 +26,19 @@ export function isProtectedSpeciesSelected(
 
 export function selectAllProtectedSpecies(): ProtectedSpeciesSelection {
   return null;
+}
+
+export function deselectAllProtectedSpecies(): ProtectedSpeciesSelection {
+  return new Set();
+}
+
+export function toggleAllProtectedSpecies(
+  selected: ProtectedSpeciesSelection,
+): ProtectedSpeciesSelection {
+  if (isAllProtectedSpeciesSelected(selected)) {
+    return deselectAllProtectedSpecies();
+  }
+  return selectAllProtectedSpecies();
 }
 
 export function toggleProtectedSpecies(

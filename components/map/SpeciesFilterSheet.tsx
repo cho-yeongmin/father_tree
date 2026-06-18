@@ -6,7 +6,7 @@ import { PROTECTED_TREE_SPECIES } from "@/lib/data/protected-tree-species";
 import {
   isAllProtectedSpeciesSelected,
   isProtectedSpeciesSelected,
-  selectAllProtectedSpecies,
+  toggleAllProtectedSpecies,
   toggleProtectedSpecies,
   type ProtectedSpeciesSelection,
 } from "@/lib/trees/species-filter";
@@ -103,9 +103,9 @@ export function SpeciesFilterSheet({
               type="button"
               variant={allSelected ? "primary" : "outline"}
               className="flex-1 px-3 text-base"
-              onClick={() => onChange(selectAllProtectedSpecies())}
+              onClick={() => onChange(toggleAllProtectedSpecies(selected))}
             >
-              전체 선택
+              전체 선택 및 해지
             </Button>
           </div>
         </div>
