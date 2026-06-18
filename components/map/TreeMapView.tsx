@@ -19,7 +19,6 @@ const TreeMap = dynamic(
 interface TreeMapViewProps {
   trees: Tree[];
   reviewedTreeIds: string[];
-  userFocus?: { latitude: number; longitude: number } | null;
   fitAllTrees?: boolean;
   onMapViewportChange?: (bounds: GeoBounds, mapLevel: number) => void;
   protectedLoading?: boolean;
@@ -29,7 +28,6 @@ interface TreeMapViewProps {
 export function TreeMapView({
   trees,
   reviewedTreeIds,
-  userFocus,
   fitAllTrees,
   onMapViewportChange,
   protectedLoading = false,
@@ -39,7 +37,6 @@ export function TreeMapView({
     <TreeMap
       trees={trees}
       reviewedTreeIds={reviewedTreeIds}
-      userFocus={userFocus}
       fitAllTrees={fitAllTrees}
       onMapViewportChange={onMapViewportChange}
       protectedLoading={protectedLoading}

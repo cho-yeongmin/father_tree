@@ -22,6 +22,24 @@ function isValidViewport(viewport: SavedMapViewport): boolean {
   );
 }
 
+export function hasSavedMapViewport(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      return false;
+    }
+
+    const parsed = JSON.parse(raw) as SavedMapViewport;
+    return isValidViewport(parsed);
+  } catch {
+    return false;
+  }
+}
+
 export function loadMapViewport(): SavedMapViewport {
   if (typeof window === "undefined") {
     return { ...DEFAULT_MAP_REGION };

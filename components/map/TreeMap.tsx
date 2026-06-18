@@ -1,12 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useGeolocation } from "@/hooks/useGeolocation";
 import { loadKakaoMapScript, MARKER_IMAGES } from "@/lib/kakao/maps";
+import { FIRST_VISIT_USER_MAP_LEVEL } from "@/lib/map/default-region";
+import { getRegionMapCenter } from "@/lib/map/region-centers";
+import { createUserLocationDotElement } from "@/lib/map/user-location-dot";
 import {
+  hasSavedMapViewport,
   loadMapViewport,
   saveMapViewport,
 } from "@/lib/map/viewport-storage";
-import { getRegionMapCenter } from "@/lib/map/region-centers";
 import { attachLabelImage } from "@/lib/map/label-image-loader";
 import type { GeoBounds } from "@/lib/geo/bounds";
 import { resolvePinType } from "@/lib/trees/pin-type";
@@ -22,7 +26,6 @@ import { TreeSummaryCard } from "./TreeSummaryCard";
 interface TreeMapProps {
   trees: Tree[];
   reviewedTreeIds: string[];
-  userFocus?: { latitude: number; longitude: number } | null;
   fitAllTrees?: boolean;
   onMapViewportChange?: (bounds: GeoBounds, mapLevel: number) => void;
   protectedLoading?: boolean;
@@ -39,18 +42,25 @@ interface OverlayItem {
 export function TreeMap({
   trees,
   reviewedTreeIds,
-  userFocus = null,
   fitAllTrees = false,
   onMapViewportChange,
   protectedLoading = false,
   regionFocus = null,
 }: TreeMapProps) {
+  const { position: userPosition } = useGeolocation();
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<kakao.maps.Map | null>(null);
   const clustererRef = useRef<kakao.maps.MarkerClusterer | null>(null);
   const markersRef = useRef<kakao.maps.Marker[]>([]);
   const overlayItemsRef = useRef<OverlayItem[]>([]);
+  const userLocationOverlayRef = useRef<kakao.maps.CustomOverlay | null>(null);
   const reviewedSet = useRef(new Set(reviewedTreeIds));
+  const allowViewportSaveRef = useRef(
+    typeof window !== "undefined" ? hasSavedMapViewport() : false,
+  );
+  const hasCenteredOnUserRef = useRef(
+    typeof window !== "undefined" ? hasSavedMapViewport() : false,
+  );
 
   const [selectedTree, setSelectedTree] = useState<Tree | null>(null);
   const [selectedPinType, setSelectedPinType] = useState<MarkerPinType | null>(
@@ -72,11 +82,13 @@ export function TreeMap({
     }
 
     const center = map.getCenter();
-    saveMapViewport({
-      latitude: center.getLat(),
-      longitude: center.getLng(),
-      level: map.getLevel(),
-    });
+    if (allowViewportSaveRef.current) {
+      saveMapViewport({
+        latitude: center.getLat(),
+        longitude: center.getLng(),
+        level: map.getLevel(),
+      });
+    }
 
     if (!onMapViewportChange) {
       return;
@@ -154,8 +166,18 @@ export function TreeMap({
         });
         clustererRef.current = clusterer;
 
-        kakao.maps.event.addListener(map, "zoom_changed", refreshOverlayVisibility);
-        kakao.maps.event.addListener(map, "dragend", refreshOverlayVisibility);
+        const markUserMovedMap = () => {
+          allowViewportSaveRef.current = true;
+        };
+
+        kakao.maps.event.addListener(map, "zoom_changed", () => {
+          markUserMovedMap();
+          refreshOverlayVisibility();
+        });
+        kakao.maps.event.addListener(map, "dragend", () => {
+          markUserMovedMap();
+          refreshOverlayVisibility();
+        });
         kakao.maps.event.addListener(map, "idle", () => {
           refreshOverlayVisibility();
           emitViewportChange();
@@ -181,6 +203,8 @@ export function TreeMap({
       markersRef.current = [];
       overlayItemsRef.current.forEach((item) => item.overlay.setMap(null));
       overlayItemsRef.current = [];
+      userLocationOverlayRef.current?.setMap(null);
+      userLocationOverlayRef.current = null;
       setMapReady(false);
     };
   }, [refreshOverlayVisibility, emitViewportChange]);
@@ -191,11 +215,44 @@ export function TreeMap({
       return;
     }
 
+    allowViewportSaveRef.current = true;
     const center = getRegionMapCenter(regionFocus.region);
     const latLng = new kakao.maps.LatLng(center.latitude, center.longitude);
     map.setCenter(latLng);
     map.setLevel(center.level);
   }, [mapReady, regionFocus]);
+
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!mapReady || !map || !userPosition) {
+      return;
+    }
+
+    const latLng = new kakao.maps.LatLng(
+      userPosition.latitude,
+      userPosition.longitude,
+    );
+
+    if (!userLocationOverlayRef.current) {
+      userLocationOverlayRef.current = new kakao.maps.CustomOverlay({
+        position: latLng,
+        content: createUserLocationDotElement(),
+        xAnchor: 0.5,
+        yAnchor: 0.5,
+        zIndex: 10,
+      });
+      userLocationOverlayRef.current.setMap(map);
+    } else {
+      userLocationOverlayRef.current.setPosition(latLng);
+    }
+
+    if (!hasCenteredOnUserRef.current) {
+      map.setCenter(latLng);
+      map.setLevel(FIRST_VISIT_USER_MAP_LEVEL);
+      hasCenteredOnUserRef.current = true;
+      allowViewportSaveRef.current = true;
+    }
+  }, [mapReady, userPosition]);
 
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -263,14 +320,7 @@ export function TreeMap({
     markersRef.current = markers;
     clusterer.addMarkers(markers);
 
-    if (userFocus) {
-      const userLatLng = new kakao.maps.LatLng(
-        userFocus.latitude,
-        userFocus.longitude,
-      );
-      map.setCenter(userLatLng);
-      map.setLevel(trees.length <= 3 ? 4 : 6);
-    } else if (fitAllTrees && trees.length > 0) {
+    if (fitAllTrees && trees.length > 0) {
       const bounds = new kakao.maps.LatLngBounds();
       trees.forEach((tree) => {
         bounds.extend(new kakao.maps.LatLng(tree.latitude, tree.longitude));
@@ -279,14 +329,7 @@ export function TreeMap({
     }
 
     refreshOverlayVisibility();
-  }, [
-    trees,
-    handleMarkerClick,
-    mapReady,
-    userFocus,
-    fitAllTrees,
-    refreshOverlayVisibility,
-  ]);
+  }, [trees, handleMarkerClick, mapReady, fitAllTrees, refreshOverlayVisibility]);
 
   if (loadError) {
     return (
@@ -317,10 +360,10 @@ export function TreeMap({
           tree={selectedTree}
           pinType={selectedPinType}
           distanceLabel={
-            userFocus
+            userPosition
               ? formatDistanceKm(
-                  userFocus.latitude,
-                  userFocus.longitude,
+                  userPosition.latitude,
+                  userPosition.longitude,
                   selectedTree,
                 )
               : null
