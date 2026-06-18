@@ -23,6 +23,7 @@ interface TreeMapViewProps {
   fitAllTrees?: boolean;
   onMapViewportChange?: (bounds: GeoBounds, mapLevel: number) => void;
   protectedLoading?: boolean;
+  regionFocus?: { region: string; nonce: number } | null;
 }
 
 export function TreeMapView({
@@ -32,6 +33,7 @@ export function TreeMapView({
   fitAllTrees,
   onMapViewportChange,
   protectedLoading = false,
+  regionFocus = null,
 }: TreeMapViewProps) {
   return (
     <TreeMap
@@ -41,6 +43,7 @@ export function TreeMapView({
       fitAllTrees={fitAllTrees}
       onMapViewportChange={onMapViewportChange}
       protectedLoading={protectedLoading}
+      regionFocus={regionFocus}
     />
   );
 }

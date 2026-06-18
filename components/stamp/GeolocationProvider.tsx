@@ -12,6 +12,7 @@ export function GeolocationProvider() {
     <StampNotifier
       tree={stampEvent.tree}
       distanceM={stampEvent.distanceM}
+      newBadges={stampEvent.newBadges}
       onDismiss={dismissStamp}
     />
   );

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getDistanceMeters } from "@/lib/geo/distance";
+import { detectNewBadgesForUser } from "@/lib/badges/detect-new";
+import type { BadgeDefinition } from "@/lib/badges/definitions";
 import { fetchTreesNearPositionClient } from "@/lib/queries/trees-client";
 import { createClient } from "@/lib/supabase/client";
 import type { Tree } from "@/types/database";
@@ -10,6 +12,7 @@ import { useGeolocation } from "./useGeolocation";
 interface StampEvent {
   tree: Tree;
   distanceM: number;
+  newBadges: BadgeDefinition[];
 }
 
 interface UseStampTourOptions {
@@ -63,10 +66,12 @@ export function useStampTour({ enabled = true }: UseStampTourOptions = {}) {
     requestNotificationPermission();
   }, [requestNotificationPermission]);
 
-  const showNotification = useCallback((tree: Tree) => {
+  const showNotification = useCallback((tree: Tree, badgeTitles: string[]) => {
     if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+      const badgeLine =
+        badgeTitles.length > 0 ? ` 새 배지: ${badgeTitles.join(", ")}` : "";
       new Notification("방문 스탬프 획득! 🌳", {
-        body: `${tree.name} 방문이 인증되었습니다.`,
+        body: `${tree.name} 방문이 인증되었습니다.${badgeLine}`,
         icon: "/markers/marker-star.svg",
       });
     }
@@ -128,8 +133,12 @@ export function useStampTour({ enabled = true }: UseStampTourOptions = {}) {
         }
 
         stampedTodayRef.current.add(tree.id);
-        setStampEvent({ tree, distanceM });
-        showNotification(tree);
+        const newBadges = await detectNewBadgesForUser(user.id);
+        setStampEvent({ tree, distanceM, newBadges });
+        showNotification(
+          tree,
+          newBadges.map((badge) => badge.title),
+        );
       }
     }
 

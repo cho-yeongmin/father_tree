@@ -6,6 +6,7 @@ import {
   loadMapViewport,
   saveMapViewport,
 } from "@/lib/map/viewport-storage";
+import { getRegionMapCenter } from "@/lib/map/region-centers";
 import { attachLabelImage } from "@/lib/map/label-image-loader";
 import type { GeoBounds } from "@/lib/geo/bounds";
 import { resolvePinType } from "@/lib/trees/pin-type";
@@ -25,6 +26,7 @@ interface TreeMapProps {
   fitAllTrees?: boolean;
   onMapViewportChange?: (bounds: GeoBounds, mapLevel: number) => void;
   protectedLoading?: boolean;
+  regionFocus?: { region: string; nonce: number } | null;
 }
 
 interface OverlayItem {
@@ -41,6 +43,7 @@ export function TreeMap({
   fitAllTrees = false,
   onMapViewportChange,
   protectedLoading = false,
+  regionFocus = null,
 }: TreeMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<kakao.maps.Map | null>(null);
@@ -181,6 +184,18 @@ export function TreeMap({
       setMapReady(false);
     };
   }, [refreshOverlayVisibility, emitViewportChange]);
+
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!mapReady || !map || !regionFocus) {
+      return;
+    }
+
+    const center = getRegionMapCenter(regionFocus.region);
+    const latLng = new kakao.maps.LatLng(center.latitude, center.longitude);
+    map.setCenter(latLng);
+    map.setLevel(center.level);
+  }, [mapReady, regionFocus]);
 
   useEffect(() => {
     const map = mapInstanceRef.current;

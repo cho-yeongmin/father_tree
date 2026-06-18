@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { BadgeDefinition } from "@/lib/badges/definitions";
 import type { Tree } from "@/types/database";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -8,10 +9,16 @@ import { Card } from "@/components/ui/Card";
 interface StampNotifierProps {
   tree: Tree;
   distanceM: number;
+  newBadges?: BadgeDefinition[];
   onDismiss: () => void;
 }
 
-export function StampNotifier({ tree, distanceM, onDismiss }: StampNotifierProps) {
+export function StampNotifier({
+  tree,
+  distanceM,
+  newBadges = [],
+  onDismiss,
+}: StampNotifierProps) {
   return (
     <div
       className="fixed inset-x-4 top-20 z-50"
@@ -31,6 +38,18 @@ export function StampNotifier({ tree, distanceM, onDismiss }: StampNotifierProps
           <br />
           약 {Math.round(distanceM)}m 거리에서 인증되었습니다.
         </p>
+        {newBadges.length > 0 && (
+          <div className="mt-3 rounded-xl bg-primary/10 px-4 py-3 text-center">
+            <p className="text-lg font-semibold text-primary">새 배지 획득!</p>
+            <ul className="mt-1 space-y-1 text-base text-foreground">
+              {newBadges.map((badge) => (
+                <li key={badge.id}>
+                  {badge.icon} {badge.title}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <p className="mt-3 text-center text-lg text-muted">
           지금 바로 별점과 감상을 남겨 보세요!
         </p>

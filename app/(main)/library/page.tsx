@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { LibraryBadgeSection } from "@/components/library/LibraryBadgeSection";
 import { SortFilter } from "@/components/library/SortFilter";
 import { VisitList } from "@/components/library/VisitList";
 import { Button } from "@/components/ui/Button";
@@ -67,7 +68,10 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
             </div>
           </Card>
         ) : (
-          <VisitList items={items} />
+          <>
+            <LibraryBadgeSection items={items} />
+            <VisitList items={items} />
+          </>
         )}
       </div>
     </>
