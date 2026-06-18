@@ -1,21 +1,35 @@
 import { PageHeader } from "@/components/layout/PageHeader";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { Card } from "@/components/ui/Card";
-import { createClient } from "@/lib/supabase/server";
+import { getSessionUser } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 
-export default async function LoginPage() {
+interface LoginPageProps {
+  searchParams: Promise<{ next?: string }>;
+}
+
+function sanitizeNextPath(next: string | undefined): string {
+  if (!next || !next.startsWith("/") || next.startsWith("//")) {
+    return "/map";
+  }
+  if (next.startsWith("/auth/login")) {
+    return "/map";
+  }
+  return next;
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const params = await searchParams;
+  const nextPath = sanitizeNextPath(params.next);
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (supabaseUrl && supabaseKey) {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getSessionUser();
 
     if (user) {
-      redirect("/map");
+      redirect(nextPath);
     }
   }
 
@@ -27,7 +41,7 @@ export default async function LoginPage() {
       />
       <div className="flex flex-1 flex-col gap-4 p-4">
         {supabaseUrl && supabaseKey ? (
-          <LoginForm />
+          <LoginForm nextPath={nextPath} />
         ) : (
           <Card padding="lg">
             <p className="text-xl text-foreground">

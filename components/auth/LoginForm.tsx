@@ -31,7 +31,11 @@ function getLoginErrorMessage(errorMessage: string): string {
 const inputClassName =
   "min-h-touch w-full rounded-xl border-2 border-border bg-background px-4 text-lg text-foreground focus:border-primary focus:outline-none";
 
-export function LoginForm() {
+interface LoginFormProps {
+  nextPath?: string;
+}
+
+export function LoginForm({ nextPath = "/map" }: LoginFormProps) {
   const router = useRouter();
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
@@ -60,7 +64,7 @@ export function LoginForm() {
     }
 
     saveRememberedLogin(userId, password);
-    router.push("/map");
+    router.push(nextPath);
     router.refresh();
   }
 

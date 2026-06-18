@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import type { Visit } from "@/types/database";
 
@@ -12,15 +13,13 @@ export async function getLatestVisitForTree(
   }
 
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getSessionUser();
 
     if (!user) {
       return { visit: null, isLoggedIn: false };
     }
 
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("visits")
       .select("*")

@@ -1,26 +1,25 @@
+import { getSessionUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import type { LibrarySortKey, MyLibraryItem } from "@/types/database";
 
 export async function getLibraryItems(
   sort: LibrarySortKey = "visited_at",
-): Promise<{ items: MyLibraryItem[]; isLoggedIn: boolean }> {
+): Promise<MyLibraryItem[]> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    return { items: [], isLoggedIn: false };
+    return [];
   }
 
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getSessionUser();
 
     if (!user) {
-      return { items: [], isLoggedIn: false };
+      return [];
     }
 
+    const supabase = await createClient();
     let query = supabase
       .from("my_library")
       .select("*")
@@ -44,11 +43,11 @@ export async function getLibraryItems(
     const { data, error } = await query;
 
     if (error || !data) {
-      return { items: [], isLoggedIn: true };
+      return [];
     }
 
-    return { items: data as MyLibraryItem[], isLoggedIn: true };
+    return data as MyLibraryItem[];
   } catch {
-    return { items: [], isLoggedIn: false };
+    return [];
   }
 }

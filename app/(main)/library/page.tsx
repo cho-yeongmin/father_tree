@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { ScreenLogoutFooter } from "@/components/layout/ScreenLogoutFooter";
 import { LibraryBadgeSection } from "@/components/library/LibraryBadgeSection";
 import { SortFilter } from "@/components/library/SortFilter";
 import { VisitList } from "@/components/library/VisitList";
@@ -13,6 +14,38 @@ interface LibraryPageProps {
   searchParams: Promise<{ sort?: string }>;
 }
 
+async function LibraryContent({ sort }: { sort: LibrarySortKey }) {
+  const items = await getLibraryItems(sort);
+
+  if (items.length === 0) {
+    return (
+      <Card className="flex min-h-[40vh] items-center justify-center">
+        <div className="text-center">
+          <p className="text-6xl" aria-hidden>
+            📚
+          </p>
+          <p className="mt-4 text-xl font-medium text-foreground">
+            아직 방문한 나무가 없습니다
+          </p>
+          <p className="mt-2 text-lg text-muted">
+            지도에서 나무를 찾아 가까이 가면 스탬프가 찍힙니다
+          </p>
+          <Link href="/map" className="mt-6 inline-block">
+            <Button>지도로 가기</Button>
+          </Link>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <>
+      <LibraryBadgeSection items={items} />
+      <VisitList items={items} />
+    </>
+  );
+}
+
 export default async function LibraryPage({ searchParams }: LibraryPageProps) {
   const params = await searchParams;
   const sort = (params.sort as LibrarySortKey) ?? "visited_at";
@@ -21,8 +54,6 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
   )
     ? sort
     : "visited_at";
-
-  const { items, isLoggedIn } = await getLibraryItems(validSort);
 
   return (
     <>
@@ -34,45 +65,16 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
         <Suspense fallback={<div className="h-touch" />}>
           <SortFilter />
         </Suspense>
-
-        {!isLoggedIn ? (
-          <Card className="flex min-h-[40vh] flex-col items-center justify-center text-center">
-            <p className="text-6xl" aria-hidden>
-              🔐
-            </p>
-            <p className="mt-4 text-xl font-medium text-foreground">
-              로그인이 필요합니다
-            </p>
-            <p className="mt-2 text-lg text-muted">
-              방문 스탬프와 감상을 저장하려면 로그인해 주세요
-            </p>
-            <Link href="/auth/login" className="mt-6 block w-full max-w-xs">
-              <Button fullWidth>로그인하기</Button>
-            </Link>
-          </Card>
-        ) : items.length === 0 ? (
-          <Card className="flex min-h-[40vh] items-center justify-center">
-            <div className="text-center">
-              <p className="text-6xl" aria-hidden>
-                📚
-              </p>
-              <p className="mt-4 text-xl font-medium text-foreground">
-                아직 방문한 나무가 없습니다
-              </p>
-              <p className="mt-2 text-lg text-muted">
-                지도에서 나무를 찾아 가까이 가면 스탬프가 찍힙니다
-              </p>
-              <Link href="/map" className="mt-6 inline-block">
-                <Button>지도로 가기</Button>
-              </Link>
-            </div>
-          </Card>
-        ) : (
-          <>
-            <LibraryBadgeSection items={items} />
-            <VisitList items={items} />
-          </>
-        )}
+        <Suspense
+          fallback={
+            <Card className="flex min-h-[40vh] items-center justify-center">
+              <p className="text-lg text-muted">라이브러리를 불러오는 중...</p>
+            </Card>
+          }
+        >
+          <LibraryContent sort={validSort} />
+        </Suspense>
+        <ScreenLogoutFooter />
       </div>
     </>
   );

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { ScreenLogoutFooter } from "@/components/layout/ScreenLogoutFooter";
 import { TreeDetailContent } from "@/components/trees/TreeDetailContent";
 import { getTreeById } from "@/lib/queries/trees";
 import { getVisitPhotos } from "@/lib/queries/visit-photos";
@@ -29,6 +30,7 @@ export default async function TreeDetailPage({ params }: TreeDetailPageProps) {
         isLoggedIn={isLoggedIn}
         photos={photos}
       />
+      <ScreenLogoutFooter />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { SAMPLE_TREES } from "@/lib/data/sample-trees";
+import { getSessionUser } from "@/lib/auth/session";
+import { getCachedNaturalMonuments } from "@/lib/queries/cached-trees";
 import { createClient } from "@/lib/supabase/server";
-import { fetchNaturalMonuments } from "@/lib/queries/tree-fetch";
 import type { Tree } from "@/types/database";
 
 export interface MapInitialData {
@@ -24,23 +25,22 @@ export async function getMapInitialData(): Promise<MapInitialData> {
   }
 
   try {
-    const supabase = await createClient();
-    const naturalMonuments = await fetchNaturalMonuments(supabase);
+    const [naturalMonuments, user] = await Promise.all([
+      getCachedNaturalMonuments(),
+      getSessionUser(),
+    ]);
 
-    if (!naturalMonuments?.length) {
+    if (!naturalMonuments.length) {
       return {
         naturalMonuments: sampleNaturalMonuments(),
         reviewedTreeIds: new Set(),
       };
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
     const reviewedTreeIds = new Set<string>();
 
     if (user) {
+      const supabase = await createClient();
       const { data: visits } = await supabase
         .from("visits")
         .select("tree_id, rating, memo")
